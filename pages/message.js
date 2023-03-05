@@ -1,7 +1,8 @@
 const { Configuration, OpenAIApi } = require('openai');
+const axios = require('axios');
 const { Message } = require("./db");
 
-const {OPEN_API_KEY} = process.env;
+const {OPEN_API_KEY, OPEN_AI_PROXY} = process.env;
 const AI_TYPE_TEXT = 'text';
 const MESSAGE_STATUS_THINKING = 1;
 const MESSAGE_STATUS_ANSWERED = 2;
@@ -12,15 +13,38 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-async function getAIResponse(prompt) {
-  const completion = await openai.createCompletion({
-    model: 'text-davinci-003',
-    prompt,
-    max_tokens: 1024,
-    temperature: 0.1,
-  });
-  return (completion?.data?.choices?.[0].text || 'AI 挂了').trim();
+// async function getAIResponse(prompt) {
+//   const completion = await openai.createCompletion({
+//     model: 'text-davinci-003',
+//     prompt,
+//     max_tokens: 1024,
+//     temperature: 0.1,
+//   });
+//   return (completion?.data?.choices?.[0].text || 'AI 挂了').trim();
+// }
+
+async function getAIResponse(prompt){
+  const requestOptions = {
+    method: "POST",
+    url: `${OPEN_AI_PROXY}/v1/chat/completions`,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPEN_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [{role: "user", content: prompt}],
+    }),
+  };
+
+  try {
+    const response = await axios(requestOptions);
+    return (response?.data?.choices?.[0].text || 'AI 挂了').trim();
+  } catch (error) {
+    console.error("Error on request:", error);
+  }
 }
+
 
 async function getAIMessage({ Content, FromUserName, CreateTime }) {
   const message = await Message.findOne({
