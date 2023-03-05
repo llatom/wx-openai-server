@@ -32,7 +32,6 @@
 
 - [Koa](https://koajs.com/)
 - [Sequelize](https://sequelize.org/)
-- [wechat](https://github.com/node-webot/wechat)
 - [OpenAI API](https://beta.openai.com/docs/api-reference/introduction)
 
 ## 开源协议
